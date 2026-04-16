@@ -1,5 +1,7 @@
 # Dukar
 
+[![CI](https://github.com/sam-b-anderson/dukar/actions/workflows/ci.yml/badge.svg)](https://github.com/sam-b-anderson/dukar/actions/workflows/ci.yml)
+
 > *Named after the head of King Taravangian's Testers in Brandon Sanderson's Stormlight Archive — whose job was determining each day what kind of cognitive day the king was having before he made important decisions.*
 
 A daily diagnostic hook for Claude Code that tells you whether Opus 4.6 is performing within its normal range before you start working.
@@ -13,6 +15,14 @@ Boris Cherny (Claude Code team lead) has confirmed: *"the specific turns where i
 The interim workaround is the environment variable `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`, which forces a fixed reasoning budget. But no tool exists for users to verify which kind of day Claude is having before they commit to important work.
 
 Benchmarks don't capture this because benchmarks include "think step by step" system prompts that force reasoning regardless of the adaptive allocator's decision. Dukar fills this gap.
+
+## Background
+
+Before designing Dukar, I spent 60 days collecting data on this problem from r/ClaudeCode and r/ClaudeAI — 3,965 unique posts, 5,304 comments from the top 30 highest-engagement threads, plus sentiment and claim analysis. The community had converged on three distinct technical claims; Dukar targets the one that's most actionable from a user's seat: adaptive thinking regression. See [docs/research-summary.md](docs/research-summary.md) for the synthesized findings.
+
+I then ran a dedicated calibration against SimpleBench-style probes (150 calls, $8.51, 10 questions × 3 probe configs × 5 runs) to verify which test prompts actually discriminate between healthy and degraded Opus 4.6. Two prompts survived; the car wash test became Dukar's primary canary. See [docs/calibration-results.md](docs/calibration-results.md).
+
+The pre-implementation spec is preserved as [docs/spec.md](docs/spec.md) and the platform/auth/billing verification work is in [docs/verification-results.md](docs/verification-results.md).
 
 ## Install
 
@@ -79,6 +89,52 @@ Creates a Python file with a division-by-zero bug and asks the model to fix it s
 ## Output
 
 Full results are written to `~/.dukar/latest.json` with detailed per-test data (thinking presence, token counts, costs, engagement gap analysis). History is appended to `~/.dukar/history.jsonl`.
+
+### Healthy day
+
+Zero output. Dukar runs the synchronous canary, releases the SessionStart hook, and forks the rest of the battery to a detached background process. You see your normal Claude Code prompt with no interruption.
+
+### Degraded day
+
+```
+Dukar: Opus 4.6 DEGRADED today
+  Car wash test failed (adaptive thinking skipped, 47 output tokens)
+  Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell
+  Background tests still running. Full results: ~/.dukar/latest.json
+```
+
+### `dukar history`
+
+```
+Dukar history
+
+Last 7 days:
+  Healthy:  4 days
+  Degraded: 2 days
+  Skipped:  1 day
+  Unknown:  0 days
+  Car wash adaptive pass rate: 67% (4/6 non-skipped days)
+  Tool use pass rate: 83% (5/6 non-skipped days)
+
+Last 30 days:
+  Healthy:  19 days
+  Degraded: 8 days
+  Skipped:  3 days
+  Unknown:  0 days
+  Car wash adaptive pass rate: 70% (19/27 non-skipped days)
+  Tool use pass rate: 85% (23/27 non-skipped days)
+
+Total runs: 30
+Total cost: $5.41
+```
+
+## Development
+
+```bash
+npm test    # Node's built-in test runner against test/*.test.js
+```
+
+CI runs the test suite on Node 20 and 22 across Linux, Windows, and macOS — see [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Known Limitations
 
