@@ -1,0 +1,23 @@
+{
+  "name": "dukar",
+  "version": "0.1.0",
+  "description": "Daily diagnostic hook for Claude Code to detect adaptive thinking degradation",
+  "main": "src/runner.js",
+  "bin": {
+    "dukar": "./bin/dukar.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "claude",
+    "diagnostic",
+    "benchmarking",
+    "hook"
+  ],
+  "author": "Sam Anderson",
+  "license": "MIT"
+}
