@@ -3,6 +3,7 @@ const { runCacheHealth } = require('./tests/cache-health');
 const { runToolUse } = require('./tests/tool-use');
 const { computeVerdict, computeEngagementGap } = require('./scorer');
 const { writeResults, printReport, printDegradedWarning } = require('./reporter');
+const { notify } = require('./notify');
 const fs = require('fs/promises');
 const path = require('path');
 const os = require('os');
@@ -36,7 +37,7 @@ async function runManual() {
   const engagementGap = computeEngagementGap(carWashAdaptive, carWashForced);
 
   const data = {
-    version: '0.2.2',
+    version: '0.2.3',
     timestamp: new Date().toISOString(),
     claudeCodeVersion: getClaudeCodeVersion(),
     verdict,
@@ -97,6 +98,7 @@ async function runHook() {
 
   try {
     const startTime = Date.now();
+    notify('Dukar: checking…', 'Running daily diagnostic against Opus.', { type: 'transient' });
     const carWashAdaptive = await runCarWashAdaptive();
     await fs.mkdir(dukarDir, { recursive: true });
     await fs.writeFile(datePath, today);
@@ -107,7 +109,7 @@ async function runHook() {
     const quotaUtil = carWashAdaptive.quotaUtilization;
     if (quotaUtil != null && quotaUtil > 0.90) {
       const skippedData = {
-        version: '0.2.2',
+        version: '0.2.3',
         timestamp: new Date().toISOString(),
         verdict: 'skipped',
         quota: { utilization: quotaUtil, resetsAt: carWashAdaptive.quotaResetsAt },
@@ -123,7 +125,7 @@ async function runHook() {
     });
 
     const data = {
-      version: '0.2.2',
+      version: '0.2.3',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,
@@ -144,6 +146,26 @@ async function runHook() {
 
     await writeResults(data);
     emitHookOutput(formatHookMessage(verdict, carWashAdaptive));
+
+    // Completion notification — always fires so users know dukar finished.
+    // Persistent (longer-lived) on degraded/unknown so users actually see
+    // the actionable info; transient on healthy/skipped.
+    if (verdict === 'degraded') {
+      const thinkingNote = carWashAdaptive.thinkingPresent
+        ? 'thinking present, answered wrong'
+        : 'thinking skipped';
+      notify(
+        'Dukar: Opus DEGRADED today',
+        `Canary failed (${thinkingNote}). For reasoning today, try Opus 4.5. Run /dukar-status for details.`,
+        { type: 'persistent' }
+      );
+    } else if (verdict === 'unknown') {
+      notify('Dukar: canary errored', 'See ~/.dukar/error.log for details.', { type: 'persistent' });
+    } else if (verdict === 'skipped') {
+      notify('Dukar: skipped', 'Quota above 90% — diagnostic skipped to avoid wasting quota.', { type: 'transient' });
+    } else {
+      notify('Dukar: Opus healthy ✓', 'Canary passed, thinking engaged. No action needed.', { type: 'transient' });
+    }
   } catch (err) {
     const errorLog = path.join(dukarDir, 'error.log');
     await fs.mkdir(dukarDir, { recursive: true });
@@ -212,7 +234,7 @@ async function runBackground(runId) {
     const engagementGap = computeEngagementGap(partial.carWashAdaptive, carWashForced);
 
     const data = {
-      version: '0.2.2',
+      version: '0.2.3',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,
