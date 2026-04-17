@@ -1,6 +1,6 @@
 {
   "name": "dukar",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Daily diagnostic hook for Claude Code to detect adaptive thinking degradation",
   "main": "src/runner.js",
   "bin": {

@@ -76,6 +76,30 @@ test('computeVerdict: pass-hedged on adaptive is treated as pass (only fail/erro
   assert.equal(result, 'healthy');
 });
 
+test('computeVerdict: works without toolUse (v0.2 hook battery is car-wash only)', () => {
+  assert.equal(
+    computeVerdict({
+      carWashAdaptive: { score: 'pass' },
+      quotaUtilization: 0.5,
+    }),
+    'healthy'
+  );
+  assert.equal(
+    computeVerdict({
+      carWashAdaptive: { score: 'fail' },
+      quotaUtilization: 0.5,
+    }),
+    'degraded'
+  );
+  assert.equal(
+    computeVerdict({
+      carWashAdaptive: { score: 'error' },
+      quotaUtilization: 0.5,
+    }),
+    'unknown'
+  );
+});
+
 test('computeEngagementGap: both thinking present', () => {
   const gap = computeEngagementGap(
     { thinkingPresent: true, outputTokens: 100 },

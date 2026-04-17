@@ -36,7 +36,7 @@ async function runManual() {
   const engagementGap = computeEngagementGap(carWashAdaptive, carWashForced);
 
   const data = {
-    version: '0.1.0',
+    version: '0.2.0',
     timestamp: new Date().toISOString(),
     claudeCodeVersion: getClaudeCodeVersion(),
     verdict,
@@ -86,11 +86,11 @@ async function runHook() {
   try {
     const startTime = Date.now();
     const cacheHealth = await runCacheHealth();
-    
+
     if (cacheHealth.quotaUtilization > 0.90) {
       console.log(`Dukar: skipped (quota at ${(cacheHealth.quotaUtilization * 100).toFixed(0)}%)`);
       const data = {
-        version: '0.1.0',
+        version: '0.2.0',
         timestamp: new Date().toISOString(),
         verdict: 'skipped',
         quota: { utilization: cacheHealth.quotaUtilization }
@@ -105,31 +105,37 @@ async function runHook() {
     await fs.mkdir(dukarDir, { recursive: true });
     await fs.writeFile(datePath, today);
 
-    if (carWashAdaptive.score === 'fail') {
+    const verdict = computeVerdict({
+      carWashAdaptive,
+      quotaUtilization: cacheHealth.quotaUtilization,
+    });
+
+    const data = {
+      version: '0.2.0',
+      timestamp: new Date().toISOString(),
+      claudeCodeVersion: getClaudeCodeVersion(),
+      verdict,
+      quota: {
+        utilization: cacheHealth.quotaUtilization,
+        rateLimitType: cacheHealth.rateLimitType,
+        resetsAt: cacheHealth.quotaResetsAt,
+        isUsingOverage: cacheHealth.isUsingOverage,
+      },
+      tests: {
+        carWash: { adaptive: carWashAdaptive },
+        cacheHealth,
+      },
+      totals: {
+        costUsd: (cacheHealth.costUsd ?? 0) + (carWashAdaptive.costUsd ?? 0),
+        durationMs: Date.now() - startTime,
+      },
+    };
+
+    await writeResults(data);
+
+    if (verdict === 'degraded') {
       printDegradedWarning({ carWash: { adaptive: carWashAdaptive } });
     }
-
-    // Prepare partial results for background merge
-    const runId = crypto.randomUUID();
-    const runsDir = path.join(dukarDir, 'runs');
-    await fs.mkdir(runsDir, { recursive: true });
-    
-    const partialData = {
-      startTime,
-      cacheHealth,
-      carWashAdaptive
-    };
-    await fs.writeFile(path.join(runsDir, `${runId}.partial.json`), JSON.stringify(partialData));
-
-    // Spawn detached background process
-    const dukarBin = path.join(__dirname, '..', 'bin', 'dukar.js');
-    const child = spawn(process.execPath, [dukarBin, '__background', runId], {
-      detached: true,
-      stdio: 'ignore',
-      shell: true
-    });
-    child.unref();
-
   } catch (err) {
     const errorLog = path.join(dukarDir, 'error.log');
     await fs.mkdir(dukarDir, { recursive: true });
@@ -159,7 +165,7 @@ async function runBackground(runId) {
     const engagementGap = computeEngagementGap(partial.carWashAdaptive, carWashForced);
 
     const data = {
-      version: '0.1.0',
+      version: '0.2.0',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,

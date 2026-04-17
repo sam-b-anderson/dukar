@@ -5,13 +5,11 @@ function computeVerdict(results) {
     return 'skipped';
   }
 
-  if (carWashAdaptive.score === 'error' || toolUse.score === 'error') {
-    return 'unknown';
-  }
+  if (carWashAdaptive.score === 'error') return 'unknown';
+  if (toolUse && toolUse.score === 'error') return 'unknown';
 
-  if (carWashAdaptive.score === 'fail' || toolUse.score === 'fail') {
-    return 'degraded';
-  }
+  if (carWashAdaptive.score === 'fail') return 'degraded';
+  if (toolUse && toolUse.score === 'fail') return 'degraded';
 
   return 'healthy';
 }

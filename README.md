@@ -6,6 +6,8 @@
 
 A daily diagnostic hook for Claude Code that tells you whether Opus is performing within its normal range before you start working.
 
+> **Update — April 17, 2026:** I tested the canary across Opus 4.5, 4.6, and 4.7 (200 controlled calls). 4.5 still passes ~80%; **4.6 and 4.7 fail 0/20**, even with `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`. On 4.7 the env var workaround doesn't even engage thinking on short prompts. Full data: [docs/2026-04-17-comparison/](docs/2026-04-17-comparison/).
+
 ## The Problem
 
 Claude Code users on Max subscriptions report that Opus has bad days. Sometimes the model is sloppy, argumentative, skips reading files before editing them, or pattern-matches instead of reasoning. The community has converged on a root cause: the adaptive thinking allocator decides per-turn how much reasoning to apply, and increasingly decides "not much."
@@ -71,39 +73,38 @@ dukar history    # Pass rates over the last 7 and 30 days
 
 ## What It Measures
 
-### Test 1 — Car Wash Canary (synchronous)
+The daily SessionStart hook runs **two tiny calls**: a quota probe and the car-wash canary. That's it. Everything else (forced-thinking comparison, tool-use discipline) is available via `dukar run` for users who want a full diagnostic.
+
+### Cache & Quota Probe (synchronous)
+
+A near-zero-cost prompt (`"What is 2+2?"`) that observes cache tier behavior and checks quota utilization. If you're above 90% of your 7-day window, Dukar skips the canary to avoid wasting quota during a heavy work session.
+
+### Car Wash Canary (synchronous)
 
 A logic trap: *"I want to wash my car. The car wash is 50 meters away. Should I drive or walk?"*
 
-The correct answer is "drive" — the car has to physically be at the car wash. But the strong pattern-match shortcut ("50 meters is short, just walk") wins when the model skips reasoning. Verified at 0/4 pass rate on adaptive Opus during calibration (April 2026).
+The correct answer is "drive" — the car has to physically be at the car wash. But the strong pattern-match shortcut ("50 meters is short, just walk") wins when the model skips reasoning.
 
-This is the only synchronous test. Its result determines whether you see an immediate warning.
+The April 17, 2026 comparison ([docs/2026-04-17-comparison/](docs/2026-04-17-comparison/)) shows pass rates of 80% on Opus 4.5, **0% on 4.6 and 4.7** — adaptive thinking is being skipped on short prompts regardless of user-set thinking mode.
 
-### Test 2 — Car Wash Forced (background)
+### Extras (manual `dukar run` only)
 
-The same prompt with `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`. If Test 1 fails and Test 2 passes, the issue is allocation, not capability. This A/B comparison is the core diagnostic signal.
-
-### Test 3 — Cache & Quota Probe (background)
-
-A near-zero-cost prompt (`"What is 2+2?"`) that observes cache tier behavior and checks quota utilization. If you're above 90% of your 7-day window, Dukar skips the remaining tests to avoid wasting quota.
-
-### Test 4 — Tool Use Discipline (background)
-
-Creates a Python file with a division-by-zero bug and asks the model to fix it surgically. Measures whether the model reads the file before attempting to edit — a behavioral signal that [research has shown](https://community.anthropic.com/t/data-driven-analysis-of-claude-code-s-tool-use-patterns) drops from a 6.6:1 Read:Edit ratio to 2.0:1 during degradation.
+- **Forced car-wash:** same prompt with `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`. Today's data shows this fails on 4.6 (thinking present, still wrong) and 4.7 (thinking doesn't even engage on short prompts).
+- **Tool-use discipline:** creates a Python file with a division-by-zero bug and checks whether the model reads before editing. Currently passes 100% across all Opus models — kept as a sanity check for catastrophic regressions.
 
 ## Verdict Logic
 
 | Condition | Verdict |
 |-----------|---------|
 | Quota > 90% | `SKIPPED` |
-| Test 1 or Test 4 errored | `UNKNOWN` |
-| Test 1 or Test 4 failed | `DEGRADED` |
+| Car wash errored | `UNKNOWN` |
+| Car wash failed | `DEGRADED` |
 | Otherwise | `HEALTHY` |
 
 ## Design Principles
 
 - **Silence means healthy.** Zero terminal output on good days.
-- **Sub-3-second synchronous footprint.** Background tests run after the hook releases.
+- **Two tiny calls per day.** Daily hook runs the quota probe + car-wash canary. Nothing else, by design — costs less, runs faster, easier to trust.
 - **Naked prompts.** No "think step by step." The whole point is detecting when the model skips reasoning autonomously.
 - **Binary verdict.** HEALTHY or DEGRADED. Confidence intervals live in the JSON.
 - **Graceful degradation.** If anything goes wrong, Dukar exits cleanly and never crashes Claude Code's session start.
@@ -114,15 +115,15 @@ Full results are written to `~/.dukar/latest.json` with detailed per-test data (
 
 ### Healthy day
 
-Zero output. Dukar runs the synchronous canary, releases the SessionStart hook, and forks the rest of the battery to a detached background process. You see your normal Claude Code prompt with no interruption.
+Zero output. Dukar runs the quota probe and car-wash canary, then exits. You see your normal Claude Code prompt with no interruption.
 
 ### Degraded day
 
 ```
-Dukar: DEGRADED today
-  Car wash test failed (adaptive thinking skipped, 47 output tokens)
-  Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell
-  Background tests still running. Full results: ~/.dukar/latest.json
+Dukar: Opus DEGRADED today
+  Car wash canary failed (thinking skipped, 47 output tokens)
+  For tasks that need reasoning today: try Opus 4.5, or pad short prompts with context
+  Run "dukar run" for the full diagnostic. Results: ~/.dukar/latest.json
 ```
 
 ### `dukar history`
@@ -160,10 +161,11 @@ CI runs the test suite on Node 20 and 22 across Linux, Windows, and macOS — se
 
 ## Known Limitations
 
-- **Single canary fragility.** One verified trap test. If Anthropic tunes specifically against it, Dukar goes blind.
+- **Single canary.** One trap test. If Anthropic tunes specifically against it, Dukar goes blind. The April 17 comparison shows it still discriminates 4.5 from 4.6/4.7 cleanly, but durability is unknown.
 - **Memorization risk.** Public tests can be learned by future model versions.
 - **Opus-specific.** Calibrated against Opus's adaptive thinking behavior. May need recalibration for future model families.
-- **n=1 validation.** Self-validated against one user's experience during a 14-day period.
+- **CLI/web behavior diverges.** Padding-based workarounds that engage thinking on Claude.ai web (e.g. prefixing with non-canonical text) don't reliably work via the Claude Code CLI. Dukar measures the CLI path, which is what matters for terminal work.
+- **n=1 validation.** Self-validated against one user's environment.
 
 See [METHODOLOGY.md](METHODOLOGY.md) for the research behind the test design and [HYPOTHESES.md](HYPOTHESES.md) for the falsifiable claims this build is testing.
 

@@ -69,11 +69,11 @@ function printDegradedWarning(tests) {
   const tokens = adaptive.outputTokens ?? '?';
   const thinkingNote = adaptive.thinkingPresent
     ? 'thinking present but answered wrong'
-    : 'thinking skipped';
+    : 'thinking skipped'; // adaptive allocator decided this prompt didn't warrant reasoning
   process.stderr.write('Dukar: Opus DEGRADED today\n');
   process.stderr.write(`  Car wash canary failed (${thinkingNote}, ${tokens} output tokens)\n`);
-  process.stderr.write('  Try: CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 (works on 4.6, may not engage on 4.7)\n');
-  process.stderr.write('  Background tests still running. Full results: ~/.dukar/latest.json\n');
+  process.stderr.write('  For tasks that need reasoning today: try Opus 4.5, or pad short prompts with context\n');
+  process.stderr.write('  Run "dukar run" for the full diagnostic. Results: ~/.dukar/latest.json\n');
 }
 
 module.exports = { writeResults, printReport, printDegradedWarning };
