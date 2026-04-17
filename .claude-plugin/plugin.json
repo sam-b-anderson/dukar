@@ -1,7 +1,7 @@
 {
   "name": "dukar",
   "description": "Daily diagnostic for Claude Code — detects when Opus has skipped reasoning before you start working",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Sam Anderson"
   },
