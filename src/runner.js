@@ -36,7 +36,7 @@ async function runManual() {
   const engagementGap = computeEngagementGap(carWashAdaptive, carWashForced);
 
   const data = {
-    version: '0.2.1',
+    version: '0.2.2',
     timestamp: new Date().toISOString(),
     claudeCodeVersion: getClaudeCodeVersion(),
     verdict,
@@ -107,7 +107,7 @@ async function runHook() {
     const quotaUtil = carWashAdaptive.quotaUtilization;
     if (quotaUtil != null && quotaUtil > 0.90) {
       const skippedData = {
-        version: '0.2.1',
+        version: '0.2.2',
         timestamp: new Date().toISOString(),
         verdict: 'skipped',
         quota: { utilization: quotaUtil, resetsAt: carWashAdaptive.quotaResetsAt },
@@ -123,7 +123,7 @@ async function runHook() {
     });
 
     const data = {
-      version: '0.2.1',
+      version: '0.2.2',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,
@@ -153,25 +153,42 @@ async function runHook() {
 }
 
 function formatHookMessage(verdict, carWashAdaptive) {
+  // Claude Code SessionStart hooks have no standard "show to user" output —
+  // additionalContext only seeds Claude's context. To surface a user-visible
+  // notice on degraded days, we instruct Claude to prepend a one-line message
+  // to its first response. Healthy days stay silent (no instruction) so we
+  // don't pollute every first reply with a "everything is fine" notice.
   if (verdict === 'healthy') {
-    return 'Dukar: Opus appears healthy ✓ (canary passed, thinking engaged)';
+    return 'Dukar ran at session start: Opus appears healthy ✓ (canary passed, thinking engaged). No action needed; do not mention dukar to the user unless asked.';
   }
   if (verdict === 'degraded') {
     const thinkingNote = carWashAdaptive.thinkingPresent
       ? 'thinking present but answered wrong'
       : 'thinking skipped';
+    const tokens = carWashAdaptive.outputTokens ?? '?';
     return [
-      'Dukar: Opus DEGRADED today',
-      `  Canary failed (${thinkingNote}, ${carWashAdaptive.outputTokens ?? '?'} output tokens)`,
-      '  What this means: Opus decided not to think on this question.',
-      '  For critical reasoning today: claude --model claude-opus-4-5-20251101',
-      '  /dukar-status for details · /dukar-history for trend',
+      `Dukar diagnostic at session start: Opus DEGRADED today.`,
+      `Canary failed (${thinkingNote}, ${tokens} output tokens).`,
+      `Opus decided not to engage thinking on a question that needs reasoning.`,
+      ``,
+      `INSTRUCTION FOR CLAUDE: At the very start of your first response in this session, before addressing the user's request, prepend exactly this message (verbatim, in a quote block):`,
+      ``,
+      `> ⚠️ Dukar: Opus DEGRADED today — canary failed (${thinkingNote}). For critical reasoning today, try Opus 4.5 (\`claude --model claude-opus-4-5-20251101\`). Run \`/dukar-status\` for details, \`/dukar-history\` for the trend.`,
+      ``,
+      `After delivering this notice once at the start of your first response, do not repeat it later in the session unless the user asks about dukar.`,
     ].join('\n');
   }
   if (verdict === 'unknown') {
-    return 'Dukar: canary errored today — see ~/.dukar/latest.json';
+    return [
+      `Dukar diagnostic at session start: canary ERRORED — see ~/.dukar/error.log.`,
+      ``,
+      `INSTRUCTION FOR CLAUDE: At the start of your first response, briefly tell the user: "⚠️ Dukar: canary errored today — see ~/.dukar/error.log." Do not repeat after the first response.`,
+    ].join('\n');
   }
-  return `Dukar: ${verdict}`;
+  if (verdict === 'skipped') {
+    return `Dukar ran at session start but skipped: quota above 90%. No action needed; do not mention dukar to the user unless asked.`;
+  }
+  return `Dukar ran at session start: ${verdict}.`;
 }
 
 async function runBackground(runId) {
@@ -195,7 +212,7 @@ async function runBackground(runId) {
     const engagementGap = computeEngagementGap(partial.carWashAdaptive, carWashForced);
 
     const data = {
-      version: '0.2.1',
+      version: '0.2.2',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,
