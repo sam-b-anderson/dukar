@@ -31,4 +31,5 @@ jobs:
           done
 
       - name: Run unit tests
+        shell: bash
         run: npm test
