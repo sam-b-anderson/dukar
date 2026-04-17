@@ -1,0 +1,253 @@
+{
+  "runDate": "2026-04-17",
+  "totalCalls": 200,
+  "totalCost": 15.349104,
+  "cells": [
+    {
+      "cell": {
+        "model": "claude-opus-4-5-20251101",
+        "probe": "car-wash",
+        "condition": "adaptive"
+      },
+      "n": 20,
+      "passes": 16,
+      "fails": 4,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 0.8,
+      "passRateLow": 0.5839782779742402,
+      "passRateHigh": 0.9193436467288001,
+      "thinkingPresentRate": 1,
+      "avgOutputTokens": 143,
+      "medianOutputTokens": 136,
+      "avgDurationMs": 6031,
+      "cost": 0.5416477500000001
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-5-20251101",
+        "probe": "tool-use",
+        "condition": "adaptive"
+      },
+      "n": 20,
+      "passes": 20,
+      "fails": 0,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 1,
+      "passRateLow": 0.8388698745050667,
+      "passRateHigh": 0.9999999999999998,
+      "thinkingPresentRate": 1,
+      "avgOutputTokens": 512,
+      "medianOutputTokens": 484,
+      "avgDurationMs": 14584,
+      "cost": 2.3085014999999998
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-6",
+        "probe": "car-wash",
+        "condition": "adaptive"
+      },
+      "n": 20,
+      "passes": 0,
+      "fails": 20,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 0,
+      "passRateLow": 0,
+      "passRateHigh": 0.1611301254949332,
+      "thinkingPresentRate": 0,
+      "avgOutputTokens": 31,
+      "medianOutputTokens": 31,
+      "avgDurationMs": 4916,
+      "cost": 0.6158857499999999
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-6",
+        "probe": "car-wash",
+        "condition": "forced"
+      },
+      "n": 20,
+      "passes": 0,
+      "fails": 20,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 0,
+      "passRateLow": 0,
+      "passRateHigh": 0.1611301254949332,
+      "thinkingPresentRate": 1,
+      "avgOutputTokens": 53,
+      "medianOutputTokens": 53,
+      "avgDurationMs": 5286,
+      "cost": 0.44610625
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-6",
+        "probe": "tool-use",
+        "condition": "adaptive"
+      },
+      "n": 20,
+      "passes": 20,
+      "fails": 0,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 1,
+      "passRateLow": 0.8388698745050667,
+      "passRateHigh": 0.9999999999999998,
+      "thinkingPresentRate": 0,
+      "avgOutputTokens": 376,
+      "medianOutputTokens": 347,
+      "avgDurationMs": 14012,
+      "cost": 2.2668312500000005
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-6",
+        "probe": "tool-use",
+        "condition": "forced"
+      },
+      "n": 20,
+      "passes": 20,
+      "fails": 0,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 1,
+      "passRateLow": 0.8388698745050667,
+      "passRateHigh": 0.9999999999999998,
+      "thinkingPresentRate": 1,
+      "avgOutputTokens": 465,
+      "medianOutputTokens": 524,
+      "avgDurationMs": 16214,
+      "cost": 2.347663
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-7",
+        "probe": "car-wash",
+        "condition": "adaptive"
+      },
+      "n": 20,
+      "passes": 0,
+      "fails": 20,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 0,
+      "passRateLow": 0,
+      "passRateHigh": 0.1611301254949332,
+      "thinkingPresentRate": 0,
+      "avgOutputTokens": 64,
+      "medianOutputTokens": 63,
+      "avgDurationMs": 3837,
+      "cost": 0.4322347500000001
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-7",
+        "probe": "car-wash",
+        "condition": "forced"
+      },
+      "n": 20,
+      "passes": 1,
+      "fails": 19,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 0.05,
+      "passRateLow": 0.008881219432873143,
+      "passRateHigh": 0.23613589351256678,
+      "thinkingPresentRate": 0,
+      "avgOutputTokens": 64,
+      "medianOutputTokens": 61,
+      "avgDurationMs": 3877,
+      "cost": 0.347979
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-7",
+        "probe": "tool-use",
+        "condition": "adaptive"
+      },
+      "n": 20,
+      "passes": 20,
+      "fails": 0,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 1,
+      "passRateLow": 0.8388698745050667,
+      "passRateHigh": 0.9999999999999998,
+      "thinkingPresentRate": 1,
+      "avgOutputTokens": 513,
+      "medianOutputTokens": 461,
+      "avgDurationMs": 9774,
+      "cost": 3.0135832500000004
+    },
+    {
+      "cell": {
+        "model": "claude-opus-4-7",
+        "probe": "tool-use",
+        "condition": "forced"
+      },
+      "n": 20,
+      "passes": 20,
+      "fails": 0,
+      "errors": 0,
+      "valid": 20,
+      "passRate": 1,
+      "passRateLow": 0.8388698745050667,
+      "passRateHigh": 0.9999999999999998,
+      "thinkingPresentRate": 1,
+      "avgOutputTokens": 524,
+      "medianOutputTokens": 455,
+      "avgDurationMs": 10867,
+      "cost": 3.0286714999999997
+    }
+  ],
+  "engagementGaps": [
+    {
+      "model": "claude-opus-4-6",
+      "probe": "car-wash",
+      "adaptivePassRate": 0,
+      "forcedPassRate": 0,
+      "gap": 0,
+      "adaptiveThinkingRate": 0,
+      "forcedThinkingRate": 1,
+      "adaptiveTokens": 31,
+      "forcedTokens": 53
+    },
+    {
+      "model": "claude-opus-4-6",
+      "probe": "tool-use",
+      "adaptivePassRate": 1,
+      "forcedPassRate": 1,
+      "gap": 0,
+      "adaptiveThinkingRate": 0,
+      "forcedThinkingRate": 1,
+      "adaptiveTokens": 347,
+      "forcedTokens": 524
+    },
+    {
+      "model": "claude-opus-4-7",
+      "probe": "car-wash",
+      "adaptivePassRate": 0,
+      "forcedPassRate": 0.05,
+      "gap": 0.05,
+      "adaptiveThinkingRate": 0,
+      "forcedThinkingRate": 0,
+      "adaptiveTokens": 63,
+      "forcedTokens": 61
+    },
+    {
+      "model": "claude-opus-4-7",
+      "probe": "tool-use",
+      "adaptivePassRate": 1,
+      "forcedPassRate": 1,
+      "gap": 0,
+      "adaptiveThinkingRate": 1,
+      "forcedThinkingRate": 1,
+      "adaptiveTokens": 461,
+      "forcedTokens": 455
+    }
+  ]
+}
