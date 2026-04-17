@@ -37,7 +37,7 @@ async function runManual() {
   const engagementGap = computeEngagementGap(carWashAdaptive, carWashForced);
 
   const data = {
-    version: '0.2.3',
+    version: '0.2.4',
     timestamp: new Date().toISOString(),
     claudeCodeVersion: getClaudeCodeVersion(),
     verdict,
@@ -109,7 +109,7 @@ async function runHook() {
     const quotaUtil = carWashAdaptive.quotaUtilization;
     if (quotaUtil != null && quotaUtil > 0.90) {
       const skippedData = {
-        version: '0.2.3',
+        version: '0.2.4',
         timestamp: new Date().toISOString(),
         verdict: 'skipped',
         quota: { utilization: quotaUtil, resetsAt: carWashAdaptive.quotaResetsAt },
@@ -125,7 +125,7 @@ async function runHook() {
     });
 
     const data = {
-      version: '0.2.3',
+      version: '0.2.4',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,
@@ -234,7 +234,7 @@ async function runBackground(runId) {
     const engagementGap = computeEngagementGap(partial.carWashAdaptive, carWashForced);
 
     const data = {
-      version: '0.2.3',
+      version: '0.2.4',
       timestamp: new Date().toISOString(),
       claudeCodeVersion: getClaudeCodeVersion(),
       verdict,
