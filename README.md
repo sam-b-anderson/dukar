@@ -4,11 +4,11 @@
 
 > *Named after the head of King Taravangian's Testers in Brandon Sanderson's Stormlight Archive — whose job was determining each day what kind of cognitive day the king was having before he made important decisions.*
 
-A daily diagnostic hook for Claude Code that tells you whether Opus 4.6 is performing within its normal range before you start working.
+A daily diagnostic hook for Claude Code that tells you whether Opus is performing within its normal range before you start working.
 
 ## The Problem
 
-Claude Code users on Max subscriptions report that Opus 4.6 has bad days. Sometimes the model is sloppy, argumentative, skips reading files before editing them, or pattern-matches instead of reasoning. The community has converged on a root cause: Opus 4.6's adaptive thinking allocator decides per-turn how much reasoning to apply, and increasingly decides "not much."
+Claude Code users on Max subscriptions report that Opus has bad days. Sometimes the model is sloppy, argumentative, skips reading files before editing them, or pattern-matches instead of reasoning. The community has converged on a root cause: the adaptive thinking allocator decides per-turn how much reasoning to apply, and increasingly decides "not much."
 
 Boris Cherny (Claude Code team lead) has confirmed: *"the specific turns where it fabricated had zero reasoning emitted, while the turns with deep reasoning were correct."*
 
@@ -53,7 +53,7 @@ dukar uninstall  # Remove the hook (--keep-history to preserve logs)
 
 A logic trap: *"I want to wash my car. The car wash is 50 meters away. Should I drive or walk?"*
 
-The correct answer is "drive" — the car has to physically be at the car wash. But the strong pattern-match shortcut ("50 meters is short, just walk") wins when the model skips reasoning. Verified at 0/4 pass rate on adaptive Opus 4.6 during calibration (April 2026).
+The correct answer is "drive" — the car has to physically be at the car wash. But the strong pattern-match shortcut ("50 meters is short, just walk") wins when the model skips reasoning. Verified at 0/4 pass rate on adaptive Opus during calibration (April 2026).
 
 This is the only synchronous test. Its result determines whether you see an immediate warning.
 
@@ -97,7 +97,7 @@ Zero output. Dukar runs the synchronous canary, releases the SessionStart hook, 
 ### Degraded day
 
 ```
-Dukar: Opus 4.6 DEGRADED today
+Dukar: DEGRADED today
   Car wash test failed (adaptive thinking skipped, 47 output tokens)
   Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell
   Background tests still running. Full results: ~/.dukar/latest.json
@@ -140,7 +140,7 @@ CI runs the test suite on Node 20 and 22 across Linux, Windows, and macOS — se
 
 - **Single canary fragility.** One verified trap test. If Anthropic tunes specifically against it, Dukar goes blind.
 - **Memorization risk.** Public tests can be learned by future model versions.
-- **Opus 4.6 only.** Calibrated against the current adaptive thinking behavior.
+- **Opus-specific.** Calibrated against Opus's adaptive thinking behavior. May need recalibration for future model families.
 - **n=1 validation.** Self-validated against one user's experience during a 14-day period.
 
 See [METHODOLOGY.md](METHODOLOGY.md) for the research behind the test design and [HYPOTHESES.md](HYPOTHESES.md) for the falsifiable claims this build is testing.

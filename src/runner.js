@@ -56,7 +56,7 @@ async function runManual() {
       toolUse
     },
     totals: {
-      costUsd: cacheHealth.costUsd + carWashAdaptive.costUsd + carWashForced.costUsd + toolUse.costUsd,
+      costUsd: (cacheHealth.costUsd ?? 0) + (carWashAdaptive.costUsd ?? 0) + (carWashForced.costUsd ?? 0) + (toolUse.costUsd ?? 0),
       durationMs: Date.now() - startTime
     }
   };
@@ -64,9 +64,7 @@ async function runManual() {
   await writeResults(data);
   printReport(data);
 
-  if (verdict === 'degraded') process.exit(1);
-  if (verdict === 'unknown') process.exit(2);
-  process.exit(0);
+  process.exit(verdict === 'degraded' ? 1 : verdict === 'unknown' ? 2 : 0);
 }
 
 async function runHook() {
@@ -181,7 +179,7 @@ async function runBackground(runId) {
         toolUse
       },
       totals: {
-        costUsd: partial.cacheHealth.costUsd + partial.carWashAdaptive.costUsd + carWashForced.costUsd + toolUse.costUsd,
+        costUsd: (partial.cacheHealth.costUsd ?? 0) + (partial.carWashAdaptive.costUsd ?? 0) + (carWashForced.costUsd ?? 0) + (toolUse.costUsd ?? 0),
         durationMs: Date.now() - partial.startTime
       }
     };

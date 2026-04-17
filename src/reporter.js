@@ -20,50 +20,56 @@ function printReport(data) {
   console.log(`Dukar diagnostic report — ${dateStr}`);
   console.log(`Verdict: ${verdict.toUpperCase()}\n`);
 
-  console.log(`Test 1 (car wash, adaptive):       ${tests.carWash.adaptive.score.toUpperCase()}`);
-  console.log(`  Response: "${tests.carWash.adaptive.responseText.slice(0, 60).replace(/\n/g, ' ')}..."`);
-  console.log(`  Thinking: ${tests.carWash.adaptive.thinkingPresent ? 'present' : 'absent'}`);
-  console.log(`  Tokens: ${tests.carWash.adaptive.outputTokens}, Duration: ${(tests.carWash.adaptive.durationApiMs / 1000).toFixed(1)}s, Cost: $${tests.carWash.adaptive.costUsd.toFixed(3)}`);
-  console.log('');
+  const adaptive = tests.carWash?.adaptive;
+  if (adaptive) {
+    console.log(`Test 1 (car wash, adaptive):       ${adaptive.score.toUpperCase()}`);
+    console.log(`  Response: "${(adaptive.responseText || '').slice(0, 60).replace(/\n/g, ' ')}..."`);
+    console.log(`  Thinking: ${adaptive.thinkingPresent ? 'present' : 'absent'}`);
+    console.log(`  Tokens: ${adaptive.outputTokens ?? 0}, Duration: ${((adaptive.durationApiMs ?? 0) / 1000).toFixed(1)}s, Cost: $${(adaptive.costUsd ?? 0).toFixed(3)}`);
+    console.log('');
+  }
 
-  if (tests.carWash.forced) {
-    console.log(`Test 2 (car wash, forced thinking): ${tests.carWash.forced.score.toUpperCase()}`);
-    console.log(`  Response: "${tests.carWash.forced.responseText.slice(0, 60).replace(/\n/g, ' ')}..."`);
-    console.log(`  Thinking: ${tests.carWash.forced.thinkingPresent ? 'present' : 'absent'}${tests.carWash.forced.thinkingContent ? ` (${tests.carWash.forced.thinkingContent.length} chars)` : ''}`);
-    console.log(`  Tokens: ${tests.carWash.forced.outputTokens}, Duration: ${(tests.carWash.forced.durationApiMs / 1000).toFixed(1)}s, Cost: $${tests.carWash.forced.costUsd.toFixed(3)}`);
+  const forced = tests.carWash?.forced;
+  if (forced) {
+    console.log(`Test 2 (car wash, forced thinking): ${forced.score.toUpperCase()}`);
+    console.log(`  Response: "${(forced.responseText || '').slice(0, 60).replace(/\n/g, ' ')}..."`);
+    console.log(`  Thinking: ${forced.thinkingPresent ? 'present' : 'absent'}${forced.thinkingContent ? ` (${forced.thinkingContent.length} chars)` : ''}`);
+    console.log(`  Tokens: ${forced.outputTokens ?? 0}, Duration: ${((forced.durationApiMs ?? 0) / 1000).toFixed(1)}s, Cost: $${(forced.costUsd ?? 0).toFixed(3)}`);
     console.log('');
   }
 
   console.log(`Test 3 (cache health):              info`);
-  console.log(`  Cache tier: ${tests.cacheHealth.cacheTier}`);
-  if (quota && quota.utilization !== null) {
+  console.log(`  Cache tier: ${tests.cacheHealth?.cacheTier ?? 'unknown'}`);
+  if (quota?.utilization != null) {
     console.log(`  Quota utilization: ${(quota.utilization * 100).toFixed(0)}% of ${quota.rateLimitType || 'window'}`);
   }
   console.log('');
 
-  if (tests.toolUse) {
-    console.log(`Test 4 (tool use):                  ${tests.toolUse.score.toUpperCase()}`);
-    console.log(`  Read before edit: ${tests.toolUse.readBeforeEdit ? 'yes' : 'no'}`);
-    console.log(`  Edit type: ${tests.toolUse.writeInvoked ? 'full-rewrite' : 'surgical'}`);
-    console.log(`  Thinking: ${tests.toolUse.thinkingPresent ? 'present' : 'absent'}`);
-    console.log(`  Tokens: ${tests.toolUse.outputTokens}, Duration: ${(tests.toolUse.durationApiMs / 1000).toFixed(1)}s, Cost: $${tests.toolUse.costUsd.toFixed(3)}`);
+  const tool = tests.toolUse;
+  if (tool) {
+    console.log(`Test 4 (tool use):                  ${tool.score.toUpperCase()}`);
+    console.log(`  Read before edit: ${tool.readBeforeEdit ? 'yes' : 'no'}`);
+    console.log(`  Edit type: ${tool.writeInvoked ? 'full-rewrite' : 'surgical'}`);
+    console.log(`  Thinking: ${tool.thinkingPresent ? 'present' : 'absent'}`);
+    console.log(`  Tokens: ${tool.outputTokens ?? 0}, Duration: ${((tool.durationApiMs ?? 0) / 1000).toFixed(1)}s, Cost: $${(tool.costUsd ?? 0).toFixed(3)}`);
     console.log('');
   }
 
-  console.log(`Total: $${totals.costUsd.toFixed(3)} across ${(totals.durationMs / 1000).toFixed(1)}s`);
+  console.log(`Total: $${(totals.costUsd ?? 0).toFixed(3)} across ${((totals.durationMs ?? 0) / 1000).toFixed(1)}s`);
   console.log('');
 
   if (verdict === 'degraded') {
-    console.log(`Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell`);
+    console.log('Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell');
   }
-  console.log(`Detailed results: ~/.dukar/latest.json`);
+  console.log('Detailed results: ~/.dukar/latest.json');
 }
 
 function printDegradedWarning(tests) {
-  process.stderr.write(`Dukar: Opus 4.6 DEGRADED today\n`);
-  process.stderr.write(`  Car wash test failed (adaptive thinking skipped, ${tests.carWash.adaptive.outputTokens} output tokens)\n`);
-  process.stderr.write(`  Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell\n`);
-  process.stderr.write(`  Background tests still running. Full results: ~/.dukar/latest.json\n`);
+  const tokens = tests.carWash?.adaptive?.outputTokens ?? '?';
+  process.stderr.write('Dukar: DEGRADED today\n');
+  process.stderr.write(`  Car wash test failed (adaptive thinking skipped, ${tokens} output tokens)\n`);
+  process.stderr.write('  Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell\n');
+  process.stderr.write('  Background tests still running. Full results: ~/.dukar/latest.json\n');
 }
 
 module.exports = { writeResults, printReport, printDegradedWarning };

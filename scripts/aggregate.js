@@ -132,7 +132,7 @@ async function main() {
 
   const totalCost = summary.reduce((a, s) => a + s.cost, 0);
 
-  // Write summary.json
+  // Write summary.json + summary.md to scratch (runs/) AND committed (docs/)
   const summaryJson = {
     runDate,
     totalCalls: records.length,
@@ -140,13 +140,19 @@ async function main() {
     cells: summary,
     engagementGaps: gaps,
   };
-  await fs.writeFile(path.join(runsDir, 'summary.json'), JSON.stringify(summaryJson, null, 2));
-
-  // Write summary.md
   const md = renderMarkdown(summaryJson);
-  await fs.writeFile(path.join(runsDir, 'summary.md'), md);
 
-  console.log(`Wrote summary.json and summary.md`);
+  const docsDir = path.join(__dirname, '..', 'docs', `${runDate}-comparison`);
+  await fs.mkdir(docsDir, { recursive: true });
+
+  for (const dir of [runsDir, docsDir]) {
+    await fs.writeFile(path.join(dir, 'summary.json'), JSON.stringify(summaryJson, null, 2));
+    await fs.writeFile(path.join(dir, 'summary.md'), md);
+  }
+
+  console.log(`Wrote summary.json and summary.md to:`);
+  console.log(`  ${runsDir}`);
+  console.log(`  ${docsDir}`);
   console.log(`\nTotal cost across all cells: $${totalCost.toFixed(2)}`);
 }
 
@@ -204,10 +210,6 @@ function renderMarkdown(s) {
   lines.push(`- **Scoring:** car wash passes when "drive" appears before "walk"; tool-use passes when the model invokes Read before Edit on the fixture and never falls back to Write.`);
   lines.push(`- **Harness:** \`scripts/compare.js\` in this repo. Each call's full JSON is in \`runs/${s.runDate}/raw/\`.`);
   return lines.join('\n') + '\n';
-}
-
-function shortModel(id) {
-  return id.replace('claude-opus-', '').replace('-20251101', '');
 }
 
 main().catch(err => {

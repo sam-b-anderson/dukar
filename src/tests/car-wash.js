@@ -1,81 +1,48 @@
 const { invoke } = require('../invoke');
 
+const PROMPT = 'I want to wash my car. The car wash is 50 meters away. Should I drive or walk?';
+
 async function runCarWashAdaptive() {
-  const result = await invoke({
-    prompt: 'I want to wash my car. The car wash is 50 meters away. Should I drive or walk?',
-    model: 'opus',
-    timeoutMs: 15000,
-  });
-
-  if (result.error) {
-    return { ...result, score: 'error' };
-  }
-
-  const score = scoreCarWash(result.responseText);
-  return { ...result, score };
+  const result = await invoke({ prompt: PROMPT, model: 'opus', timeoutMs: 15000 });
+  if (result.error) return { ...result, score: 'error' };
+  return { ...result, score: scoreCarWash(result.responseText) };
 }
 
 async function runCarWashForced() {
   const result = await invoke({
-    prompt: 'I want to wash my car. The car wash is 50 meters away. Should I drive or walk?',
+    prompt: PROMPT,
     model: 'opus',
-    envOverrides: {
-      CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING: '1',
-    },
+    envOverrides: { CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING: '1' },
     timeoutMs: 15000,
   });
-
-  if (result.error) {
-    return { ...result, score: 'error' };
-  }
-
-  const score = scoreCarWash(result.responseText, true);
-  return { ...result, score };
+  if (result.error) return { ...result, score: 'error' };
+  return { ...result, score: scoreCarWash(result.responseText, true) };
 }
 
 function scoreCarWash(text, allowHedged = false) {
-  const lowerText = text.toLowerCase();
-  
-  // PASS-HEDGED detection for Test 2
+  const lower = text.toLowerCase();
+
+  // PASS-HEDGED: response acknowledges the car must be at the wash
   if (allowHedged) {
-    const hasDrive = lowerText.includes('drive');
-    const hasWalk = lowerText.includes('walk');
-    const first300 = lowerText.slice(0, 300);
-    
-    if (hasDrive && hasWalk && (first300.includes('drive') && first300.includes('walk'))) {
+    const first300 = lower.slice(0, 300);
+    if (first300.includes('drive') && first300.includes('walk')) {
       const hedgedPhrases = [
-        'car needs to be',
-        'need the car',
-        'car has to be',
-        'need to drive the car',
-        'drive the car there',
-        'into the car wash',
-        'at the car wash to'
+        'car needs to be', 'need the car', 'car has to be',
+        'need to drive the car', 'drive the car there',
+        'into the car wash', 'at the car wash to',
       ];
-      
-      if (hedgedPhrases.some(phrase => first300.includes(phrase))) {
+      if (hedgedPhrases.some(p => first300.includes(p))) {
         return 'pass-hedged';
       }
     }
   }
 
-  // Standard scoring
-  const driveMatch = lowerText.match(/\bdrive\b/);
-  const walkMatch = lowerText.match(/\bwalk\b/);
+  // Standard: which word appears first?
+  const driveIndex = lower.search(/\bdrive\b/);
+  const walkIndex = lower.search(/\bwalk\b/);
 
-  if (!driveMatch && !walkMatch) {
-    if (text.length < 200) return 'fail'; // Model didn't answer properly
-    // Check first 200 chars as per spec
-    const first200 = lowerText.slice(0, 200);
-    if (!first200.includes('drive') && !first200.includes('walk')) return 'fail';
-  }
-
-  const driveIndex = driveMatch ? driveMatch.index : Infinity;
-  const walkIndex = walkMatch ? walkMatch.index : Infinity;
-
-  if (driveIndex < walkIndex) return 'pass';
-  if (walkIndex < driveIndex) return 'fail';
-
+  if (driveIndex === -1 && walkIndex === -1) return 'fail';
+  if (driveIndex >= 0 && (walkIndex === -1 || driveIndex < walkIndex)) return 'pass';
   return 'fail';
 }
 
