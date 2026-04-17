@@ -65,10 +65,14 @@ function printReport(data) {
 }
 
 function printDegradedWarning(tests) {
-  const tokens = tests.carWash?.adaptive?.outputTokens ?? '?';
-  process.stderr.write('Dukar: DEGRADED today\n');
-  process.stderr.write(`  Car wash test failed (adaptive thinking skipped, ${tokens} output tokens)\n`);
-  process.stderr.write('  Recommendation: set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in your shell\n');
+  const adaptive = tests.carWash?.adaptive || {};
+  const tokens = adaptive.outputTokens ?? '?';
+  const thinkingNote = adaptive.thinkingPresent
+    ? 'thinking present but answered wrong'
+    : 'thinking skipped';
+  process.stderr.write('Dukar: Opus DEGRADED today\n');
+  process.stderr.write(`  Car wash canary failed (${thinkingNote}, ${tokens} output tokens)\n`);
+  process.stderr.write('  Try: CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 (works on 4.6, may not engage on 4.7)\n');
   process.stderr.write('  Background tests still running. Full results: ~/.dukar/latest.json\n');
 }
 

@@ -26,17 +26,40 @@ The pre-implementation spec is preserved as [docs/spec.md](docs/spec.md) and the
 
 ## Install
 
+In Claude Code, paste:
+
+```
+/plugin marketplace add sam-b-anderson/dukar
+/plugin install dukar@dukar
+```
+
+Two commands. The plugin registers a SessionStart hook automatically — no `npm install`, no manual settings.json edits, no `dukar install`. Restart Claude Code (or run `/plugin reload-plugins`) and you're done.
+
+To remove: `/plugin uninstall dukar@dukar`.
+
+<details>
+<summary>Manual install (for non-plugin setups or development)</summary>
+
 ```bash
+git clone https://github.com/sam-b-anderson/dukar
+cd dukar/dukar
 npm install -g .
 dukar install
 ```
 
+Requires Node 20+.
+</details>
+
 ## How It Works
 
-Dukar registers a [SessionStart hook](https://docs.anthropic.com/en/docs/claude-code/hooks) in Claude Code. On your first session each day, it runs a small diagnostic battery (~$0.18, ~15 seconds):
+Dukar registers a [SessionStart hook](https://docs.anthropic.com/en/docs/claude-code/hooks) in Claude Code. On your first session each day, it runs a small diagnostic battery (~15 seconds):
 
 - **Healthy days:** Complete silence. Dukar never interrupts good days.
-- **Degraded days:** A stderr warning recommending you set `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`.
+- **Degraded days:** A stderr warning explaining what failed and what to try.
+
+### Quota and cost
+
+Each daily run consumes a small slice of your 7-day Max quota window — a few small prompts, the equivalent of one or two ordinary Claude Code messages. Dukar **automatically skips itself when you're above 90% utilization**, so it can never push you over the line during a heavy work session. Subscription users won't see a dollar cost; for API users it's roughly $0.15–$0.25 per day.
 
 ### Manual Commands
 
@@ -44,7 +67,6 @@ Dukar registers a [SessionStart hook](https://docs.anthropic.com/en/docs/claude-
 dukar run        # Force a fresh diagnostic right now
 dukar status     # Show the most recent result
 dukar history    # Pass rates over the last 7 and 30 days
-dukar uninstall  # Remove the hook (--keep-history to preserve logs)
 ```
 
 ## What It Measures

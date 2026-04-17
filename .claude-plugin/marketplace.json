@@ -1,0 +1,18 @@
+{
+  "name": "dukar",
+  "owner": {
+    "name": "Sam Anderson"
+  },
+  "metadata": {
+    "description": "Self-hosted marketplace for the dukar Claude Code diagnostic"
+  },
+  "plugins": [
+    {
+      "name": "dukar",
+      "source": "./",
+      "description": "Daily diagnostic for Claude Code that detects when Opus skips reasoning",
+      "category": "diagnostic",
+      "tags": ["opus", "adaptive-thinking", "hooks", "benchmarking"]
+    }
+  ]
+}

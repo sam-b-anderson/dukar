@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+
+// Suppress the DEP0190 warning emitted on Windows by spawn({ shell: true }).
+// We deliberately use shell:true with our own quoting (see src/invoke.js).
+process.removeAllListeners('warning');
+
 const { runManual, runHook, runBackground } = require('../src/runner');
 const { install } = require('../src/install');
 const { uninstall } = require('../src/uninstall');

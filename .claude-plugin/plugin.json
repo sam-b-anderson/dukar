@@ -1,0 +1,18 @@
+{
+  "name": "dukar",
+  "description": "Daily diagnostic for Claude Code — detects when Opus has skipped reasoning before you start working",
+  "version": "0.2.0",
+  "author": {
+    "name": "Sam Anderson"
+  },
+  "homepage": "https://github.com/sam-b-anderson/dukar",
+  "repository": "https://github.com/sam-b-anderson/dukar",
+  "license": "MIT",
+  "keywords": [
+    "diagnostic",
+    "hooks",
+    "opus",
+    "adaptive-thinking",
+    "benchmarking"
+  ]
+}
